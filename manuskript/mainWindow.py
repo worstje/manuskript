@@ -612,7 +612,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.mdlCharacter.dataChanged.connect(self.startTimerNoChanges)
         self.mdlPlots.dataChanged.connect(self.startTimerNoChanges)
         self.mdlWorld.dataChanged.connect(self.startTimerNoChanges)
-        # self.mdlPersosInfos.dataChanged.connect(self.startTimerNoChanges)
         self.mdlStatus.dataChanged.connect(self.startTimerNoChanges)
         self.mdlLabels.dataChanged.connect(self.startTimerNoChanges)
 
@@ -637,9 +636,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # Add project name to Window's name
         self.setWindowTitle(self.projectName() + " - " + self.tr("Manuskript"))
-
-        # Stuff
-        # self.checkPersosID()  # Shouldn't be necessary any longer
 
         # Show main Window
         self.switchToProject()
@@ -848,8 +844,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def loadEmptyDatas(self):
         self.mdlFlatData = QStandardItemModel(self)
         self.mdlCharacter = characterModel(self)
-        # self.mdlPersosProxy = persosProxyModel(self)
-        # self.mdlPersosInfos = QStandardItemModel(self)
         self.mdlLabels = QStandardItemModel(self)
         self.mdlStatus = QStandardItemModel(self)
         self.mdlPlots = plotModel(self)
