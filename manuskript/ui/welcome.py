@@ -57,8 +57,7 @@ class welcome(QWidget, Ui_welcome):
         sttgs = QSettings()
         lastDirectory = sttgs.value("lastAccessedDirectory", defaultValue=".", type=str)
         if lastDirectory != '.':
-            print(qApp.translate("lastAccessedDirectoryInfo", "Last accessed directory \"{}\" loaded.").format(
-                lastDirectory))
+            LOGGER.info("Last accessed directory \"{}\" loaded.".format(lastDirectory))
         return lastDirectory
 
     def setLastAccessedDirectory(self, dir):

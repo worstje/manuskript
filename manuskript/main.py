@@ -17,7 +17,7 @@ from manuskript.version import getVersion
 faulthandler.enable()
 
 import logging
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 def prepare(arguments, tests=False):
     app = QApplication(sys.argv)
@@ -33,7 +33,7 @@ def prepare(arguments, tests=False):
     # Handle all sorts of Qt logging messages in Python.
     manuskript.logging.integrateQtLogging()
 
-    logger.info("Running manuskript version {}.".format(getVersion()))
+    LOGGER.info("Running manuskript version {}.".format(getVersion()))
     icon = QIcon()
     for i in [16, 32, 64, 128, 256, 512]:
         icon.addFile(appPath("icons/Manuskript/icon-{}px.png".format(i)))
@@ -55,7 +55,7 @@ def prepare(arguments, tests=False):
         """Tries to load and activate a given translation for use."""
         if appTranslator.load(translation, appPath("i18n")):
             app.installTranslator(appTranslator)
-            logger.info("Loaded translation: {}".format(translation))
+            LOGGER.info("Loaded translation: {}".format(translation))
             # Note: QTranslator.load() does some fancy heuristics where it simplifies
             #   the given locale until it is 'close enough' if the given filename does
             #   not work out. For example, if given 'i18n/manuskript_en_US.qm', it tries:
@@ -70,7 +70,7 @@ def prepare(arguments, tests=False):
             #   filenames when you observe strange behaviour with the loaded translations.
             return True
         else:
-            logger.info("No translation found or loaded. ({})".format(translation))
+            LOGGER.info("No translation found or loaded. ({})".format(translation))
             return False
 
     def activateTranslation(translation, source):
@@ -93,7 +93,7 @@ def prepare(arguments, tests=False):
                         break
 
         if using_builtin_translation:
-            logger.info("Using the builtin translation. (U.S. English)")
+            LOGGER.info("Using the builtin translation. (U.S. English)")
 
     # Load application translation
     translation = ""
@@ -107,7 +107,7 @@ def prepare(arguments, tests=False):
         translation = QLocale().uiLanguages()
         source = "available ui languages"
 
-    logger.info("Preferred translation: {} (based on {})".format(("builtin" if translation == "" else translation), source))
+    LOGGER.info("Preferred translation: {} (based on {})".format(("builtin" if translation == "" else translation), source))
     activateTranslation(translation, source)
 
     def respectSystemDarkThemeSetting():
