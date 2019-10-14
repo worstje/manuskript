@@ -53,8 +53,6 @@ characterMap = OrderedDict([
     (Character.notes, "Notes"),
 ])
 
-# If true, logs infos while saving and loading.
-LOG = False
 
 def formatMetaData(name, value, tabLength=10):
 
@@ -94,11 +92,6 @@ def slugify(name):
     return newName
 
 
-def log(*args):
-    if LOG:
-        print(" ".join(str(a) for a in args))
-
-
 def saveProject(zip=None):
     """
     Saves the project. If zip is False, the project is saved as a multitude of plain-text files for the most parts
@@ -112,7 +105,7 @@ def saveProject(zip=None):
     if zip is None:
         zip = settings.saveToZip
 
-    log("\n\nSaving to:", "zip" if zip else "folder")
+    LOGGER.info("Saving to: %s", "zip" if zip else "folder")
 
     # List of files to be written
     files = []
@@ -343,7 +336,7 @@ def saveProject(zip=None):
         folder = os.path.splitext(os.path.basename(project))[0]
 
         # Debug
-        log("\nSaving to folder", folder)
+        LOGGER.debug("Saving to folder %s", folder)
 
         # If cache is empty (meaning we haven't loaded from disk), we wipe folder, just to be sure.
         if not cache:
@@ -360,7 +353,7 @@ def saveProject(zip=None):
             # Move the old file to the new place
             try:
                 os.replace(oldPath, newPath)
-                log("* Renaming/moving {} to {}".format(old, new))
+                LOGGER.debug("* Renaming/moving {} to {}".format(old, new))
             except FileNotFoundError:
                 # Maybe parent folder has been renamed
                 pass
@@ -370,7 +363,7 @@ def saveProject(zip=None):
             for f in cache:
                 f2 = f.replace(old, new)
                 if f2 != f:
-                    log("  * Updating cache:", f, f2)
+                    LOGGER.debug("  * Updating cache: %s, %s", f, f2)
                 cache2[f2] = cache[f]
             cache = cache2
 
@@ -381,7 +374,7 @@ def saveProject(zip=None):
 
             # Check if content is in cache, and write if necessary
             if path not in cache or cache[path] != content:
-                log("* Writing file {} ({})".format(path, "not in cache" if path not in cache else "different"))
+                LOGGER.debug("* Writing file {} ({})".format(path, "not in cache" if path not in cache else "different"))
                 # mode = "w" + ("b" if type(content) == bytes else "")
                 if type(content) == bytes:
                     with open(filename, "wb") as f:
@@ -395,7 +388,7 @@ def saveProject(zip=None):
         # Removing phantoms
         for path in [p for p in cache if p not in [p for p, c in files]]:
             filename = os.path.join(dir, folder, path)
-            log("* Removing", path)
+            LOGGER.debug("* Removing %s", path)
 
             if os.path.isdir(filename):
                 shutil.rmtree(filename)
@@ -412,7 +405,7 @@ def saveProject(zip=None):
                 newDir = os.path.join(root, dir)
                 try:
                     os.removedirs(newDir)
-                    log("* Removing empty directory:", newDir)
+                    LOGGER.debug("* Removing empty directory: %s", newDir)
                 except:
                     # Directory not empty, we don't remove.
                     pass
@@ -538,8 +531,8 @@ def exportOutlineItem(root):
         lp = child._lastPath
         if lp and spath != lp:
             moves.append((lp, spath))
-            log(child.title(), "has been renamed (", lp, " → ", spath, ")")
-            log(" → We mark for moving:", lp)
+            LOGGER.debug("%s has been renamed (%s → %s)", child.title(), lp,  spath)
+            LOGGER.debug(" → We mark for moving: %s", lp)
 
         # Updates item last's path
         child._lastPath = spath
@@ -555,7 +548,7 @@ def exportOutlineItem(root):
             files.append((spath, content))
 
         else:
-            log("Unknown type")
+            LOGGER.debug("Unknown type: %s", child.type())
 
         f, m, r = exportOutlineItem(child)
         files += f
@@ -633,7 +626,7 @@ def loadProject(project, zip=None):
     ####################################################################################################################
     # Read and store everything in a dict
 
-    log("\nLoading {} ({})".format(project, "ZIP" if zip else "not zip"))
+    LOGGER.debug("Loading {} ({})".format(project, "zip" if zip else "folder"))
     if zip:
         files = loadFilesFromZip(project)
 
@@ -697,7 +690,7 @@ def loadProject(project, zip=None):
     mdl = mw.mdlLabels
     mdl.appendRow(QStandardItem(""))  # Empty = No labels
     if "labels.txt" in files:
-        log("\nReading labels:")
+        LOGGER.debug("Reading labels:")
         for s in files["labels.txt"].split("\n"):
             if not s:
                 continue
@@ -705,7 +698,7 @@ def loadProject(project, zip=None):
             m = re.search(r"^(.*?):\s*(.*)$", s)
             txt = m.group(1)
             col = m.group(2)
-            log("* Add status: {} ({})".format(txt, col))
+            LOGGER.debug("* Add status: {} ({})".format(txt, col))
             icon = iconFromColorString(col)
             mdl.appendRow(QStandardItem(icon, txt))
 
@@ -718,11 +711,11 @@ def loadProject(project, zip=None):
     mdl = mw.mdlStatus
     mdl.appendRow(QStandardItem(""))  # Empty = No status
     if "status.txt" in files:
-        log("\nReading Status:")
+        LOGGER.debug("Reading status:")
         for s in files["status.txt"].split("\n"):
             if not s:
                 continue
-            log("* Add status:", s)
+            LOGGER.debug("* Add status: %s", s)
             mdl.appendRow(QStandardItem(s))
     else:
         errors.append("status.txt")
@@ -764,7 +757,7 @@ def loadProject(project, zip=None):
 
     mdl = mw.mdlPlots
     if "plots.xml" in files:
-        log("\nReading plots:")
+        LOGGER.debug("Reading plots:")
         # xml = bytearray(files["plots.xml"], "utf-8")
         root = ET.fromstring(files["plots.xml"])
 
@@ -773,7 +766,7 @@ def loadProject(project, zip=None):
             row = getStandardItemRowFromXMLEnum(plot, Plot)
 
             # Log
-            log("* Add plot: ", row[0].text())
+            LOGGER.debug("* Add plot: %s", row[0].text())
 
             # Characters
             if row[Plot.characters].text():
@@ -800,7 +793,7 @@ def loadProject(project, zip=None):
 
     mdl = mw.mdlWorld
     if "world.opml" in files:
-        log("\nReading World:")
+        LOGGER.debug("Reading World:")
         # xml = bytearray(files["plots.xml"], "utf-8")
         root = ET.fromstring(files["world.opml"])
         body = root.find("body")
@@ -816,7 +809,7 @@ def loadProject(project, zip=None):
     # Characters
 
     mdl = mw.mdlCharacter
-    log("\nReading Characters:")
+    LOGGER.debug("Reading Characters:")
     for f in [f for f in files if "characters" in f]:
         md, body = parseMMDFile(files[f])
         c = mdl.addCharacter()
@@ -842,7 +835,7 @@ def loadProject(project, zip=None):
             else:
                 c.infos.append(CharacterInfo(c, desc, val))
 
-        log("* Adds {} ({})".format(c.name(), c.ID()))
+        LOGGER.debug("* Adds {} ({})".format(c.name(), c.ID()))
 
     ####################################################################################################################
     # Texts
@@ -850,14 +843,14 @@ def loadProject(project, zip=None):
     # everything, but the outline folder takes precedence (in cases it's been edited outside of manuskript.
 
     mdl = mw.mdlOutline
-    log("\nReading outline:")
+    LOGGER.debug("Reading outline:")
     paths = [f for f in files if "outline" in f]
     outline = OrderedDict()
 
     # We create a structure of imbricated OrderedDict to store the whole tree.
     for f in paths:
         split = f.split(os.path.sep)[1:]
-        # log("* ", split)
+        # LOGGER.debug("* %s", split)
 
         last = ""
         parent = outline
@@ -912,7 +905,7 @@ def addTextItems(mdl, odict, parent=None):
         if type(odict[k]) == OrderedDict and "folder.txt" in odict[k]:
 
             # Adds folder
-            log("{}* Adds {} to {} (folder)".format("  " * parent.level(), k, parent.title()))
+            LOGGER.debug("{}* Adds {} to {} (folder)".format("  " * parent.level(), k, parent.title()))
             item = outlineFromMMD(odict[k]["folder.txt"], parent=parent)
             item._lastPath = odict[k + ":lastPath"]
 
@@ -921,7 +914,7 @@ def addTextItems(mdl, odict, parent=None):
 
         # k is not a folder
         elif type(odict[k]) == str and k != "folder.txt" and not ":lastPath" in k:
-            log("{}* Adds {} to {} (file)".format("  " * parent.level(), k, parent.title()))
+            LOGGER.debug("{}* Adds {} to {} (file)".format("  " * parent.level(), k, parent.title()))
             item = outlineFromMMD(odict[k], parent=parent)
             item._lastPath = odict[k + ":lastPath"]
 
@@ -976,17 +969,19 @@ def appendRevisions(mdl, root):
             # Get root's ID
             ID = root.attrib["ID"]
             if not ID:
-                log("* Serious problem: no ID!")
+                LOGGER.debug("* Serious problem: no ID!")
+                LOGGER.error("Revision has no ID associated!")
                 continue
 
             # Find outline item in model
             item = mdl.getItemByID(ID)
             if not item:
-                log("* Error: no item whose ID is", ID)
+                LOGGER.debug("* Error: no item whose ID is %s", ID)
+                LOGGER.error("Could not identify the item matching the revision ID.")
                 continue
 
             # Store revision
-            log("* Appends revision ({}) to {}".format(child.attrib["timestamp"], item.title()))
+            LOGGER.debug("* Appends revision ({}) to {}".format(child.attrib["timestamp"], item.title()))
             item.appendRevision(child.attrib["timestamp"], child.attrib["text"])
 
 
@@ -998,7 +993,7 @@ def getOutlineItem(item, enum):
     @return: [QStandardItem]
     """
     row = getStandardItemRowFromXMLEnum(item, enum)
-    log("* Add worldItem:", row[0].text())
+    LOGGER.debug("* Add worldItem: %s", row[0].text())
     for child in item:
         sub = getOutlineItem(child, enum)
         row[0].appendRow(sub)
