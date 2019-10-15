@@ -3,6 +3,8 @@
 
 import os
 import re
+import sys
+import pathlib
 from random import *
 
 from PyQt5.QtCore import Qt, QRect, QStandardPaths, QObject, QRegExp, QDir
@@ -12,6 +14,9 @@ from PyQt5.QtGui import QDesktopServices
 from PyQt5.QtWidgets import qApp, QFileDialog, QTextEdit
 
 from manuskript.enums import Outline
+
+import logging
+LOGGER = logging.getLogger(__name__)
 
 # Used to detect multiple connections
 AUC = Qt.AutoConnection | Qt.UniqueConnection
@@ -441,6 +446,47 @@ def inspect():
             s.lineno,
             s.function))
         print("   " + "".join(s.code_context))
+
+# Based on answer by jfs at:
+#  https://stackoverflow.com/questions/3718657/how-to-properly-determine-current-script-directory
+def getManuskriptPath(follow_symlinks=True):
+    """Used to obtain the path Manuskript is located at."""
+    if getattr(sys, 'frozen', False): # py2exe, PyInstaller, cx_Freeze
+        path = os.path.abspath(sys.executable)
+    else:
+        import inspect
+        path = inspect.getabsfile(getManuskriptPath) + "/../.."
+    if follow_symlinks:
+        path = os.path.realpath(path)
+    return os.path.dirname(path)
+
+# Based on answer by kagronik at:
+#   https://stackoverflow.com/questions/14989858/get-the-current-git-hash-in-a-python-script
+def getGitRevision(base_path):
+    """Get git revision without relying on external processes or libraries."""
+    git_dir = pathlib.Path(base_path) / '.git'
+    if not git_dir.exists():
+        return None
+
+    with (git_dir / 'HEAD').open('r') as head:
+        ref = head.readline().split(' ')[-1].strip()
+
+    with (git_dir / ref).open('r') as git_hash:
+        return git_hash.readline().strip()
+
+def getGitRevisionAsString(base_path, short=False):
+    """Catches errors and presents a nice string."""
+    try:
+        rev = getGitRevision(base_path)
+        if short:
+            rev = rev[:7]
+        if rev is not None:
+            return "#" + rev
+        else:
+            return ""  # not a git repository
+    except Exception as e:
+        LOGGER.warning("Failed to obtain Git revision: %s", e)
+        return "#ERROR"
 
 # Spellchecker loads writablePath from this file, so we need to load it after they get defined
 from manuskript.functions.spellchecker import Spellchecker
