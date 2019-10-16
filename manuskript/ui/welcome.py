@@ -21,6 +21,9 @@ from manuskript.models.worldModel import worldModel
 from manuskript.ui.welcome_ui import Ui_welcome
 from manuskript.ui import style as S
 
+import logging
+LOGGER = logging.getLogger(__name__)
+
 try:
     locale.setlocale(locale.LC_ALL, '')
 except:
