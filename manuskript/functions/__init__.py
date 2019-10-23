@@ -478,9 +478,9 @@ def getGitRevisionAsString(base_path, short=False):
     """Catches errors and presents a nice string."""
     try:
         rev = getGitRevision(base_path)
-        if short:
-            rev = rev[:7]
         if rev is not None:
+            if short:
+                rev = rev[:7]
             return "#" + rev
         else:
             return ""  # not a git repository
