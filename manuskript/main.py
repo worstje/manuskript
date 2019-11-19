@@ -236,7 +236,7 @@ def launch(arguments, app, MW = None):
         qApp.exec_()
     qApp.deleteLater()
 
-def process_commandline():
+def process_commandline(argv):
     import argparse
     parser = argparse.ArgumentParser(description="Run the manuskript application.")
     parser.add_argument("--console", help="open the IPython Jupyter QT Console as a debugging aid",
@@ -245,7 +245,7 @@ def process_commandline():
     parser.add_argument("-L", "--logfile", default=None, help="override the default log file location")
     parser.add_argument("filename", nargs="?", metavar="FILENAME", help="the manuskript project (.msk) to open")
 
-    args = parser.parse_args()
+    args = parser.parse_args(args=argv)
 
     # Verbosity logic, see: https://gist.github.com/ms5/9f6df9c42a5f5435be0e
     #args.verbose = 70 - (10*args.verbose) if args.verbose > 0 else 0
@@ -263,7 +263,7 @@ def run():
     2. So that prepare can be used in tests, without running the whole thing
     """
     # Parse command-line arguments.
-    arguments = process_commandline()
+    arguments = process_commandline(sys.argv)
     # Initialize logging. (Does not include Qt integration yet.)
     manuskript.logging.setUp(console_level=arguments.verbose)
 
